@@ -240,7 +240,7 @@
    <module name="Header">
      <property name="headerFile" value="checkstyle/license.txt"/>
      <property name="fileExtensions" value="java"/>
-     <property name="ignoreLines" value="3"/>
+     <property name="ignoreLines" value="2"/>
    </module>
    <module name="SuppressWarningsFilter"/>
 </module>
