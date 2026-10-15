@@ -1,0 +1,137 @@
+bundle: qbit-qa-capture
+version: ${project.version}
+layer: QBIT
+entries:
+- key: app:qaCapture;slot:help
+  summary: Bug capture for QA testing, with redaction rules and the reports testers file.
+  content: |
+    QA capture lets chosen users record a bug report with screen, console and network context while they use the app. Jam is the first provider.
+
+    Start with **QA Capture Settings**: add a row for this environment with the provider team id and set the mode. Choose who captures with **QA Capture Audience** (audience modes), or let users with the QA mode permission switch it on in their preferences (self-serve modes). **QA Capture Sanitizer Rules** decide what is removed before anything leaves the browser. Filed bugs arrive in **QA Reports**.
+
+    Permissions: `qa_capture.manage` edits settings, audience and sanitizer rules; `qa_capture.view_reports` reads and triages QA reports; `qa_capture.use_qa_mode` lets a user switch QA mode on for themselves.
+- key: table:qa_capture_settings;slot:help
+  summary: How QA capture works in each environment, such as prod, with the provider team and capture mode.
+  content: |
+    **How rows get created:** An administrator adds one row per environment with New (or the host adds it in its own migration). The QBit seeds nothing here, because team ids belong to each installation.
+
+    The row whose environment matches the server's configured environment is the one in use. Capture is on only when the mode is not Off and a team id is set. Content-Security-Policy changes for the dashboard take effect on the next restart; the recorder page and the capability follow the row immediately.
+
+    For Jam: verify your domain with the recorder page at /qa/recorder, copy the team id from Jam's settings, create a reusable Recording Link for in-app Report a bug and paste its id here.
+
+    Requires `qa_capture.manage`.
+- key: table:qa_capture_settings;field:environment
+  summary: The environment this row configures. It must match the server's configured environment name, for example prod.
+- key: table:qa_capture_settings;field:provider
+  summary: The capture provider. Jam is the first provider.
+- key: table:qa_capture_settings;field:teamId
+  summary: The provider team id. For Jam, the team id from the Jam workspace settings. Capture stays off without it.
+- key: table:qa_capture_settings;field:recordingLinkId
+  summary: The id of a reusable provider recording link used by Report a bug. Optional.
+  content: |
+    Without it, users are told that an administrator must set a recording link before Report a bug can open the recorder.
+- key: table:qa_capture_settings;field:mode
+  summary: Who can capture. Off, an audience only, self-serve QA mode, or both.
+  content: |
+    - **Off**: nobody; the browser loads nothing from the provider.
+    - **Audience only**: the users and roles in QA Capture Audience.
+    - **Self-serve QA mode**: users with the QA mode permission who switch QA mode on in their preferences.
+    - **Audience and self-serve QA mode**: both.
+- key: table:qa_capture_settings;field:extraBlurSelectors
+  summary: More CSS selectors to blur in recordings, one per line. Optional.
+- key: table:qa_capture_settings;field:notes
+  summary: Notes for administrators. Optional.
+- key: table:qa_capture_audience;slot:help
+  summary: The users and roles who capture bugs when the settings mode includes an audience.
+  content: |
+    **How rows get created:** An administrator adds users and roles with New. Rows with source QA mode are created when a user switches their own QA mode in preferences (only when the host has no core preference store); they never add the user to the audience.
+
+    A User row matches the user id or email address. A Role row matches a role name from the host (by default a permission name the user holds). Matching ignores case. Deactivate a row to stop capture for that member without deleting it.
+
+    Requires `qa_capture.manage`.
+- key: table:qa_capture_audience;field:settingsId
+  summary: The environment settings this member belongs to.
+- key: table:qa_capture_audience;field:audienceType
+  summary: User for one person, Role for everyone with that role.
+- key: table:qa_capture_audience;field:value
+  summary: The user id or email address for a user, or the role name for a role.
+- key: table:qa_capture_audience;field:source
+  summary: Administrator for members added here, or the user's own QA mode switch.
+- key: table:qa_capture_audience;field:active
+  summary: Turn off to stop capture for this member while keeping the row.
+- key: table:qa_capture_audience;field:notes
+  summary: Notes for administrators, such as why this member was added. Optional.
+- key: table:qa_capture_sanitizer_rule;slot:help
+  summary: What captures redact before anything leaves the browser. Active rules are sent to every capturing browser.
+  content: |
+    **How rows get created:** The built-in rules are added by the QBit's database changelog. Rules for fields the application marks secure are added at startup. Administrators add their own with New.
+
+    Rule types: Header (removed from requests and responses), Body field (JSON keys at any depth and form fields), Query parameter (redacted in URLs), Value pattern (a regular expression valid in Java and JavaScript), Dropped path prefix (same-origin paths whose bodies are dropped) and Blur selector (CSS selectors blurred in recordings).
+
+    Built-in and secured-data rules are never changed back after you edit or deactivate them. Requires `qa_capture.manage`.
+- key: table:qa_capture_sanitizer_rule;field:ruleType
+  summary: What kind of value the rule removes. Header, body field, query parameter, pattern, path or blur selector.
+- key: table:qa_capture_sanitizer_rule;field:value
+  summary: The header, field or parameter name, pattern, path prefix or CSS selector. Header names are stored lowercase.
+  content: |
+    A value pattern must compile in Java and use only syntax JavaScript shares, and must not match empty text. A dropped path prefix starts with a slash.
+- key: table:qa_capture_sanitizer_rule;field:source
+  summary: Built in, secured data (a field the application marks secure) or administrator.
+- key: table:qa_capture_sanitizer_rule;field:sourceRef
+  summary: For secured-data rules, the table and field that marked the value secure.
+- key: table:qa_capture_sanitizer_rule;field:active
+  summary: Turn off to stop applying this rule. Inactive rules are not sent to browsers.
+- key: table:qa_capture_sanitizer_rule;field:description
+  summary: Why the rule exists. Optional.
+- key: table:qa_capture_report;slot:help
+  summary: Bugs testers reported, with where they happened, the recording link and the request ids.
+  content: |
+    **How rows get created:** A tester with QA capture on uses Report a bug; the report is created and the provider recorder opens. When the recording is saved, the provider's webhook attaches it (status Captured). A recording made without Report a bug arrives as a new report.
+
+    Use the request ids to find the matching server log lines. Set the GitHub issue and status as you triage.
+
+    Requires `qa_capture.view_reports` (or `qa_capture.manage`).
+- key: table:qa_capture_report;field:reference
+  summary: The report reference (qa- and a unique id), sent to the provider and matched by its webhook.
+- key: table:qa_capture_report;field:title
+  summary: A short description of the bug.
+- key: table:qa_capture_report;field:status
+  summary: Open, Captured (recording attached), Filed (issue created) or Closed.
+- key: table:qa_capture_report;field:pageUrl
+  summary: The page the tester was on, without secret query parameters.
+- key: table:qa_capture_report;field:appName
+  summary: The app the tester was in.
+- key: table:qa_capture_report;field:tableName
+  summary: The table the tester was looking at.
+- key: table:qa_capture_report;field:recordId
+  summary: The record the tester was looking at.
+- key: table:qa_capture_report;field:processName
+  summary: The process the tester was running.
+- key: table:qa_capture_report;field:requestIds
+  summary: The most recent request ids from the tester's browser, one per line. Search the server logs for them.
+- key: table:qa_capture_report;field:userId
+  summary: The user id of the tester.
+- key: table:qa_capture_report;field:userLabel
+  summary: The tester's name.
+- key: table:qa_capture_report;field:environment
+  summary: The environment the report came from.
+- key: table:qa_capture_report;field:provider
+  summary: The capture provider.
+- key: table:qa_capture_report;field:frontendVersion
+  summary: The version of the app the tester's browser was running.
+- key: table:qa_capture_report;field:backendVersion
+  summary: The server build version.
+- key: table:qa_capture_report;field:node
+  summary: The server node that took the report.
+- key: table:qa_capture_report;field:userAgent
+  summary: The tester's browser.
+- key: table:qa_capture_report;field:viewport
+  summary: The browser window size.
+- key: table:qa_capture_report;field:jamId
+  summary: The Jam capture id, set by the Jam webhook.
+- key: table:qa_capture_report;field:jamUrl
+  summary: Opens the Jam recording.
+- key: table:qa_capture_report;field:githubIssueUrl
+  summary: The GitHub issue for this bug, once filed.
+- key: table:qa_capture_report;field:submitterComment
+  summary: What the tester wrote when saving the recording.
