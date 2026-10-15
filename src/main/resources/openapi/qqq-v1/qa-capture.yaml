@@ -1,0 +1,328 @@
+components:
+  schemas:
+    QaCaptureCapabilityV1:
+      description: "What QA capture means for the signed-in user. Clients that see\
+        \ enabled=false do nothing else."
+      properties:
+        blurSelectors:
+          description: "CSS selectors to blur in recordings; empty when not enabled."
+          items:
+            type: "string"
+          type: "array"
+        canReport:
+          description: "Whether the user can file a report (Report a bug)."
+          type: "boolean"
+        context:
+          $ref: "#/components/schemas/QaCaptureContextV1"
+        cspOrigins:
+          $ref: "#/components/schemas/QaCaptureCspOriginsV1"
+        enabled:
+          description: "Whether capture is on for this user."
+          type: "boolean"
+        provider:
+          description: "The provider name (for example jam); null when not enabled."
+          nullable: true
+          type: "string"
+        providerConfig:
+          allOf:
+          - $ref: "#/components/schemas/QaCaptureProviderConfigV1"
+          description: "Provider settings; null when not enabled."
+          nullable: true
+        qaMode:
+          $ref: "#/components/schemas/QaCaptureQaModeV1"
+        reason:
+          description: "Why capture is on or off."
+          enum:
+          - "AUDIENCE"
+          - "QA_MODE"
+          - "OFF"
+          - "NOT_CONFIGURED"
+          - "NO_ACCESS"
+          - "QA_MODE_OFF"
+          type: "string"
+        reportsHref:
+          description: "The QA reports screen, only when the user can view reports.\
+            \ Clients follow it, never build it."
+          nullable: true
+          type: "string"
+        requestIdHeader:
+          description: "The response header carrying the request id (X-Request-Id)."
+          type: "string"
+        sanitizer:
+          allOf:
+          - $ref: "#/components/schemas/QaCaptureSanitizerV1"
+          description: "Redaction rules; null when not enabled."
+          nullable: true
+      type: "object"
+    QaCaptureContextV1:
+      description: "Server context for capture metadata."
+      properties:
+        backendVersion:
+          description: "The backend build version."
+          nullable: true
+          type: "string"
+        environment:
+          description: "The environment name."
+          type: "string"
+        node:
+          description: "The serving node."
+          nullable: true
+          type: "string"
+      type: "object"
+    QaCaptureCspOriginsV1:
+      description: "Content-Security-Policy origins the provider needs; empty when\
+        \ not enabled."
+      properties:
+        connectSrc:
+          description: "connect-src sources."
+          items:
+            type: "string"
+          type: "array"
+        frameSrc:
+          description: "frame-src sources."
+          items:
+            type: "string"
+          type: "array"
+        scriptSrc:
+          description: "script-src sources."
+          items:
+            type: "string"
+          type: "array"
+      type: "object"
+    QaCaptureErrorV1:
+      description: "An error."
+      properties:
+        error:
+          description: "What went wrong."
+          type: "string"
+      type: "object"
+    QaCaptureProviderConfigV1:
+      description: "Provider settings for the browser. For Jam: teamId, recordingLinkId\
+        \ and the script URLs."
+      properties:
+        recordingLinkId:
+          description: "A reusable recording link id for in-app Report a bug; null\
+            \ when none is set."
+          nullable: true
+          type: "string"
+        scriptUrls:
+          description: "The provider's scripts, in load order."
+          items:
+            type: "string"
+          type: "array"
+        teamId:
+          description: "The provider team id."
+          type: "string"
+      type: "object"
+    QaCaptureQaModeV1:
+      description: "The user's self-serve QA mode switch."
+      properties:
+        active:
+          description: "Whether the user's QA mode is on."
+          type: "boolean"
+        available:
+          description: "Whether the user can switch QA mode (self-serve mode and the\
+            \ qa_capture.use_qa_mode permission)."
+          type: "boolean"
+        preferenceSection:
+          description: "The user preference section holding the switch; null when\
+            \ unavailable."
+          nullable: true
+          type: "string"
+      type: "object"
+    QaCaptureReportRequestV1:
+      description: "A new QA report. Only pageUrl is required."
+      properties:
+        appName:
+          description: "The current app."
+          nullable: true
+          type: "string"
+        frontendVersion:
+          description: "The client build version."
+          nullable: true
+          type: "string"
+        pageUrl:
+          description: "The page the user is on; sanitizer query parameters are removed."
+          type: "string"
+        processName:
+          description: "The current process."
+          nullable: true
+          type: "string"
+        recordId:
+          description: "The current record id."
+          nullable: true
+          type: "string"
+        requestIds:
+          description: "Recent X-Request-Id values (at most 50 are kept, each at most\
+            \ 128 characters)."
+          items:
+            type: "string"
+          nullable: true
+          type: "array"
+        tableName:
+          description: "The current table."
+          nullable: true
+          type: "string"
+        title:
+          description: "A short title; defaults to the table and record, process,\
+            \ app or page."
+          nullable: true
+          type: "string"
+        userAgent:
+          description: "The browser user agent."
+          nullable: true
+          type: "string"
+        viewport:
+          description: "The viewport size, for example 1440x900."
+          nullable: true
+          type: "string"
+      type: "object"
+    QaCaptureReportResultV1:
+      description: "The created report and how to open the provider's recorder for\
+        \ it."
+      properties:
+        id:
+          description: "The report id."
+          type: "integer"
+        recordingParams:
+          additionalProperties:
+            type: "string"
+          description: "Query parameters that open the recorder (Jam: jam-recording,\
+            \ jam-title, jam-reference); null when no recording link is configured."
+          nullable: true
+          type: "object"
+        reference:
+          description: "The report reference (qa-<uuid>), matched by the provider\
+            \ webhook."
+          type: "string"
+        title:
+          description: "The report title."
+          type: "string"
+      type: "object"
+    QaCaptureSanitizerV1:
+      description: "Redaction rules applied in the browser before anything is sent\
+        \ to the provider."
+      properties:
+        bodyFieldNames:
+          description: "JSON keys (any depth, case-insensitive) and form fields replaced\
+            \ by the redaction text."
+          items:
+            type: "string"
+          type: "array"
+        dropPathPrefixes:
+          description: "Same-origin path prefixes whose request and response bodies\
+            \ are dropped."
+          items:
+            type: "string"
+          type: "array"
+        headerNames:
+          description: "Lowercase header names deleted from request and response headers."
+          items:
+            type: "string"
+          type: "array"
+        queryParamNames:
+          description: "Query parameters redacted in request URLs and the page URL."
+          items:
+            type: "string"
+          type: "array"
+        redaction:
+          description: "The replacement text."
+          type: "string"
+        valuePatterns:
+          description: "JavaScript RegExp sources applied with flag g to bodies and\
+            \ console arguments."
+          items:
+            type: "string"
+          type: "array"
+      type: "object"
+  securitySchemes:
+    sessionUuidCookie:
+      in: "cookie"
+      name: "sessionUUID"
+      type: "apiKey"
+info:
+  contact:
+    email: "contact@kingsrook.com"
+  description: "QA bug capture: the user's capture capability and QA report creation"
+  title: "QQQ Middleware API extension: qa-capture"
+  version: "1.0.0"
+openapi: "3.0.3"
+paths:
+  /qqq/v1/qbit/qa-capture/capability:
+    get:
+      description: "Whether QA capture is on for the signed-in user and why, the provider\
+        \ settings, sanitizer rules, blur selectors, Content-Security-Policy origins\
+        \ and server context. Requires a session; a user without access gets enabled=false,\
+        \ never 403."
+      operationId: "qaCaptureCapability"
+      responses:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "Invalid input"
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "Sign in required"
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "QA capture is not enabled for this user"
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureCapabilityV1"
+          description: "Successful Response"
+      security:
+      - sessionUuidCookie:
+        - "N/A"
+      summary: "Read the QA capture capability"
+  /qqq/v1/qbit/qa-capture/report:
+    post:
+      description: "Stores the report (page, app, table, record, process, recent request\
+        \ ids, client build) with the user, environment, backend version, node and\
+        \ provider filled in by the server, and returns its reference and the recorder\
+        \ parameters."
+      operationId: "qaCaptureReportCreate"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QaCaptureReportRequestV1"
+        required: true
+      responses:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "Invalid input"
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "Sign in required"
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureErrorV1"
+          description: "QA capture is not enabled for this user"
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaCaptureReportResultV1"
+          description: "Successful Response"
+      security:
+      - sessionUuidCookie:
+        - "N/A"
+      summary: "Create a QA report"

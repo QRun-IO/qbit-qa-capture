@@ -62,11 +62,11 @@ public final class QaCaptureSchemas
          Map.entry("enabled", bool("Whether capture is on for this user.")),
          Map.entry("reason", new Schema().withType(Type.STRING).withEnumValues(reasons()).withDescription("Why capture is on or off.")),
          Map.entry("provider", string("The provider name (for example jam); null when not enabled.").withNullable(true)),
-         Map.entry("providerConfig", ref(PROVIDER_CONFIG).withNullable(true).withDescription("Provider settings; null when not enabled.")),
+         Map.entry("providerConfig", nullableRef(PROVIDER_CONFIG).withDescription("Provider settings; null when not enabled.")),
          Map.entry("qaMode", ref(QA_MODE)),
          Map.entry("canReport", bool("Whether the user can file a report (Report a bug).")),
          Map.entry("reportsHref", string("The QA reports screen, only when the user can view reports. Clients follow it, never build it.").withNullable(true)),
-         Map.entry("sanitizer", ref(SANITIZER).withNullable(true).withDescription("Redaction rules; null when not enabled.")),
+         Map.entry("sanitizer", nullableRef(SANITIZER).withDescription("Redaction rules; null when not enabled.")),
          Map.entry("blurSelectors", stringArray("CSS selectors to blur in recordings; empty when not enabled.")),
          Map.entry("cspOrigins", ref(CSP_ORIGINS)),
          Map.entry("context", ref(CONTEXT)),
@@ -164,6 +164,16 @@ public final class QaCaptureSchemas
    private static Schema stringArray(String description)
    {
       return (new Schema().withType(Type.ARRAY).withItems(new Schema().withType(Type.STRING)).withDescription(description));
+   }
+
+
+
+   /*******************************************************************************
+    ** A nullable reference (allOf, since siblings of $ref are ignored).
+    *******************************************************************************/
+   private static Schema nullableRef(String name)
+   {
+      return (new Schema().withAllOf(List.of(ref(name))).withNullable(true));
    }
 
 
