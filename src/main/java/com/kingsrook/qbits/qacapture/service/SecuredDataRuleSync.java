@@ -130,14 +130,24 @@ public final class SecuredDataRuleSync
          {
             if(existing.add(entry.getKey().toLowerCase(Locale.ROOT)))
             {
-               QaCaptureDb.insert(QaCaptureSchema.SANITIZER_RULE, new QRecord()
-                  .withValue("ruleType", RuleType.BODY_FIELD.name())
-                  .withValue("value", entry.getKey())
-                  .withValue("source", RuleSource.SECURED_DATA.name())
-                  .withValue("sourceRef", entry.getValue())
-                  .withValue("active", true)
-                  .withValue("description", "Marked secure in the instance metadata (" + entry.getValue() + ")."));
-               added++;
+               try
+               {
+                  QaCaptureDb.insert(QaCaptureSchema.SANITIZER_RULE, new QRecord()
+                     .withValue("ruleType", RuleType.BODY_FIELD.name())
+                     .withValue("value", entry.getKey())
+                     .withValue("source", RuleSource.SECURED_DATA.name())
+                     .withValue("sourceRef", entry.getValue())
+                     .withValue("active", true)
+                     .withValue("description", "Marked secure in the instance metadata (" + entry.getValue() + ")."));
+                  added++;
+               }
+               catch(QException e)
+               {
+                  ///////////////////////////////////////////////////////////////
+                  // another replica inserted it first (unique rule): keep on  //
+                  ///////////////////////////////////////////////////////////////
+                  LOG.info("Could not add a secured-data sanitizer rule (it may exist already)", logPair("field", entry.getValue()), logPair("reason", e.getMessage()));
+               }
             }
          }
          if(added > 0)
