@@ -14,6 +14,19 @@ This file provides guidance to Claude Code when working with code in this reposi
 ./mvnw verify           # Checkstyle, unit tests, JaCoCo gate (70% instructions, 90% classes)
 ```
 
+## Architecture
+
+**Entry point:** `QaCaptureQBitProducer implements QBitMetaDataProducer<QaCaptureQBitConfig>` in `com.kingsrook.qbits.qacapture`. Packages: `metadata` (tables, permissions, help), `service` (enablement, rules, reports, QA mode), `api` (the `qa-capture` UI API extension), `web` (request ids, `/qa/recorder`, webhooks), `spi` (provider SPI, Jam, Svix). See `docs/DESIGN.md`.
+
+## Invariants
+
+- The UI contract is `src/main/resources/openapi/qqq-v1/qa-capture.yaml` (extension `qa-capture` 1.0.0), shared with `QRun-IO/qqq-frontend-next`. `QaCaptureApiContractTest` fails when code and fragment differ; regenerate with `./mvnw -Dtest=QaCaptureApiContractTest -Dqacapture.openapi.update=true test` and bump the semantic version for any change (MINOR additive, never breaking under /qqq/v1).
+- Never 403 from the capability: `enabled=false` with a reason.
+- Sanitizer rules are table data; built-in seeds are insert-only; secured-data rules are insert-only and never touch admin edits. Value patterns must be valid in Java and JavaScript (`SanitizerRules.validate`).
+- Secrets (webhook secrets) only come from the config (host environment); never in tables, logs or responses.
+- Table reads and writes from the runtime run in the system context; who may do what is decided in `QaCaptureEnablement` / `QaCaptureService`.
+- Guardrail tests (`QaCaptureGuardrailsTest`, `QaCaptureForeignKeyTest`, `QaCaptureChangelogTest`) keep every table used, seeded or explained, helped, and every reference backed by a foreign key.
+
 ## Naming (owner rule)
 
 - Tables are lowercase snake_case prefixed `qa_capture_`. The QQQ table name and the backend (SQL) name are identical.
