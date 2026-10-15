@@ -18,13 +18,11 @@ package com.kingsrook.qbits.qacapture.api;
 
 
 import java.util.List;
-import java.util.Map;
 import com.kingsrook.qbits.qacapture.service.QaCaptureService;
 import com.kingsrook.qqq.backend.core.context.QContext;
 import com.kingsrook.qqq.middleware.javalin.specs.BasicResponse;
 import com.kingsrook.qqq.middleware.javalin.specs.extensions.AbstractJsonEndpointSpec;
 import com.kingsrook.qqq.openapi.model.Method;
-import com.kingsrook.qqq.openapi.model.Schema;
 import io.javalin.http.HttpStatus;
 
 
@@ -61,17 +59,6 @@ abstract class QaCaptureJsonSpec extends AbstractJsonEndpointSpec
       return (List.of(new BasicResponse(HttpStatus.BAD_REQUEST, "Invalid input", QaCaptureSchemas.ERROR),
          new BasicResponse(HttpStatus.UNAUTHORIZED, "Sign in required", QaCaptureSchemas.ERROR),
          new BasicResponse(HttpStatus.FORBIDDEN, "QA capture is not enabled for this user", QaCaptureSchemas.ERROR)));
-   }
-
-
-
-   /*******************************************************************************
-    ** Publish the shared components (both specs register together).
-    *******************************************************************************/
-   @Override
-   public Map<String, Schema> defineComponentSchemas()
-   {
-      return (QaCaptureSchemas.components());
    }
 
 

@@ -17,9 +17,11 @@
 package com.kingsrook.qbits.qacapture.api;
 
 
+import java.util.Map;
 import com.kingsrook.qqq.backend.core.context.QContext;
 import com.kingsrook.qqq.middleware.javalin.specs.BasicOperation;
 import com.kingsrook.qqq.openapi.model.HttpMethod;
+import com.kingsrook.qqq.openapi.model.Schema;
 
 
 /*******************************************************************************
@@ -64,6 +66,18 @@ public class CapabilitySpec extends QaCaptureJsonSpec
    protected String getResponseSchemaName()
    {
       return (QaCaptureSchemas.CAPABILITY);
+   }
+
+
+
+   /*******************************************************************************
+    ** Publish the shared components once (the extension's specs register
+    ** together).
+    *******************************************************************************/
+   @Override
+   public Map<String, Schema> defineComponentSchemas()
+   {
+      return (QaCaptureSchemas.components());
    }
 
 
